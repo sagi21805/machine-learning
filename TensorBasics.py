@@ -34,3 +34,6 @@ m = m.to("cpu")                             #moves the tesnor to the cpu
 print(m.device)
 m.numpy()
 print(m)
+
+z = torch.rand(a, b)
+z.to("cpu")

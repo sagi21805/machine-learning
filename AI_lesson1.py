@@ -10,6 +10,7 @@ from IPython.display import HTML
 class LinearRegression(Module):
     def __init__(self, number_of_inputs, number_of_outputs):
         self.linear = torch.nn.Linear(number_of_inputs, number_of_outputs)
+        print(self.linear)
         
     def forward(self, x):
         return self.linear(x) 
