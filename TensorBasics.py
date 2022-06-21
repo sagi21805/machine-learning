@@ -35,5 +35,6 @@ print(m.device)
 m.numpy()
 print(m)
 
-z = torch.rand(a, b)
-z.to("cpu")
+h = torch.ones(a, b, device = device)
+h[1, 1] = 10
+print(h[1,1].item() , h[0, 0].item())
