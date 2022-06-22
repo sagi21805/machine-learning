@@ -5,21 +5,25 @@ class ShapeRecgognizer(nn.Module):
     def __init__(self):
         super(ShapeRecgognizer, self).__init__()
         self.neuralNetwork = nn.Sequential(
-            nn.Linear(3, 2),
+            nn.Linear(784, 16),
             nn.ReLU(),
-            # nn.Linear(16, 16),
-            # nn.ReLU(),
-            # nn.Linear(16, 16),
-            # nn.ReLU(),
-            nn.Linear(2, 2),
+            nn.Linear(16, 16),
             nn.ReLU(),
-            nn.Linear(2, 1),
+            nn.Linear(16, 16),
+            nn.ReLU(),
+            nn.Linear(16, 16),
+            nn.ReLU(),
+            nn.Linear(16, 10),
+            nn.ReLU(),
+            nn.Linear(10, 1)
         )
     
     def forward(self, input):
         return self.neuralNetwork(input)
         
-x = torch.tensor([10, 10, 10])
-x = x.long()
+x = torch.rand(28, 28)
+x = x.reshape(784)
+print(x)
 REC = ShapeRecgognizer()
-print(REC.forward(x))
+output = REC(x)
+print(output)
