@@ -63,4 +63,3 @@ REC = ShapeRecognizer()
 for image in ShapeRecognizer.getData():
     DATALIST = [image.view(784), os.listdir(PATH)[I].split(".")[0]]
 REC.train()
-print("1")
