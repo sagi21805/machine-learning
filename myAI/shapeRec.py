@@ -4,52 +4,58 @@ from torchvision import transforms
 import torch.optim as optim
 from PIL import Image
 import os
-import numpy as np
-import pandas as pd
-from torchdata.datapipes.iter import IterableWrapper, FileOpener
 import matplotlib.pyplot as plt
-import SimpleITK as sitk
-import sys
+import matplotlib.image as mpimg
+import random
+import struct
+import numpy as np
 
-
-PATH = "C:\\vscodeprojects\\python\\machine-learning\\myAI\\shape_data\\"
-#C:\\Users\\Demacia\\Desktop\\sagi\\machine-learning\\myAI\\shape_data\\
-DATALIST: list = os.listdir(PATH)
+PATH = "C:\\vscodeprojects\\python\\machine-learning\\DATA\\"
+TRAINING_PHOTOS = os.listdir(PATH)[2]
+TRAINING_LABELS = os.listdir(PATH)[3]
+TESTING_PHOTOS = os.listdir(PATH)[0]
+TESTING_LABELS = os.listdir(PATH)[1]
 
 class ShapeRecognizer(nn.Module):
     def __init__(self):
         super(ShapeRecognizer, self).__init__()
         self.neuralNetwork = nn.Sequential(
-            nn.Linear(784, 8),
+            nn.Linear(784, 16),
             nn.ReLU(),
-            nn.Linear(8, 8),
+            nn.Linear(16, 16),
             nn.ReLU(),
-            nn.Linear(8, 8),
+            nn.Linear(16, 16),
             nn.ReLU(),
-            nn.Linear(8, 8),
+            nn.Linear(16, 10),
             nn.ReLU(),
-            nn.Linear(8, 1),
+            
         )
     
     def forward(self, input):
         return self.neuralNetwork(input)
     
-    i = -1
-    def getTarget():
-        ShapeRecognizer.i += 1
-            # targetList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # target = int(DATALIST[i].split(".")[0])
-            # targetList[target - 1] = 1
-            # targetTensor = torch.tensor(targetList)
-        yield torch.tensor([int(DATALIST[ShapeRecognizer.i].split(".")[0])])
+    # i = -1
+    # def getTarget(list: list):
+    #     targetList = [0, 0, 0, 0, 0, 0, 0]
+    #     target = int(list[ShapeRecognizer.i].split(".")[0])
+    #     targetList[target] = 1
+    #     targetTensor = torch.tensor(targetList)
+    #     # yield torch.tensor([int(DATALIST[ShapeRecognizer.i].split(".")[0])])
+    #     return targetTensor
 
-    def dataIntoTensor():
-        ShapeRecognizer.i += 1
-        img = Image.open(PATH + DATALIST[ShapeRecognizer.i])
-        convert_tensor = transforms.ToTensor()
-        x = convert_tensor(img)
-        yield x
-    
+    # def dataIntoTensor(list: list, path: str):
+    #     img = Image.open(path + list[ShapeRecognizer.i])
+    #     convert_tensor = transforms.ToTensor()
+    #     x: torch.Tensor = convert_tensor(img)
+    #     return x
+
+    # def showImg(list: list, path: str):
+    #     img = mpimg.imread(path + list[ShapeRecognizer.i])
+    #     imgplot = plt.imshow(img)
+    #     plt.show()
+    #     plt.close()
+    #     yield ShapeRecognizer.iii
+        
     # def converImgToCsv():
     #     for i in ShapeRecognizer.dataIntoTensor():
     #         imgTensor_np = i.numpy()
@@ -58,52 +64,110 @@ class ShapeRecognizer(nn.Module):
     #         dataFrame.to_csv("testfile", index=False)
     #         dataFrame = pd.read_csv("testfile")
     #         yield dataFrame
+    i = -1
+    
+    TrainPhotos = open(PATH + TRAINING_PHOTOS,'rb')
+    magic, size = struct.unpack(">II", TrainPhotos.read(8))
+    nrows, ncols = struct.unpack(">II", TrainPhotos.read(8))
+    TrainData = np.fromfile(TrainPhotos, dtype=np.dtype(np.uint8).newbyteorder('>'))
+    TrainData = TrainData.reshape((size, nrows * ncols))
+    
+    TestPhotos = open(PATH + TESTING_PHOTOS,'rb')
+    magic, size = struct.unpack(">II", TestPhotos.read(8))
+    nrows, ncols = struct.unpack(">II", TestPhotos.read(8))
+    TestData = np.fromfile(TestPhotos, dtype=np.dtype(np.uint8).newbyteorder('>'))
+    TestData = TestData.reshape((size, nrows * ncols))
+    
+    def getData(data) -> torch.Tensor:
+        dataList = []
+        for i in data[ShapeRecognizer.i]:
+            i = i / 255
+            dataList.append(i)
+        dataTensor = torch.tensor([dataList])
+        return dataTensor
+    
+    
+    TrainLabels = open(PATH + TRAINING_LABELS,'rb')
+    magic, numOfItems = struct.unpack(">II", TrainLabels.read(8))
+    TrainList = np.fromfile(TrainLabels, dtype=np.dtype(np.uint8).newbyteorder('>'))
+    
+    TestLabels = open(PATH + TESTING_LABELS,'rb')
+    magic, numOfItems = struct.unpack(">II", TestLabels.read(8))
+    TestList = np.fromfile(TestLabels, dtype=np.dtype(np.uint8).newbyteorder('>'))
+    
+    def getTarget(TargetList) -> torch.Tensor:
+        list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        list[TargetList[ShapeRecognizer.i]] = 1
+        TargetTensor = torch.tensor(list)
+        return TargetTensor
 
+    def evaluate(self, input: torch.Tensor, target: list):
+        for i, number in enumerate(target):
+            if number == 1:
+                target = i
+        output = self.forward(input).detach()
+        highest = 0
+        guess = 0
+        for array in output:
+            for i, item in enumerate(array):
+                if item > highest:
+                    highest = item
+                    guess = i
+        try:
+            highest = highest.item()
+        except:
+            pass
+        print("guess: ", guess, "\ncertenty: ", highest, "\ntraget: ", target, "\n")
+        return [target, guess]
+            
+    def Train(self):
+        criterion = nn.MSELoss()
+        optimizer = optim.SGD(self.parameters(), lr=0.001, momentum = 0.9)
 
-    def showImgOnPlt():
-        for i in DATALIST:
-            img1 = DATALIST[i]
-            plt.imshow(img1)
-            yield 
-
-    def train(self):
-        self.loss = nn.MSELoss()
-        optimizer = optim.SGD(self.neuralNetwork.parameters(), lr=0.01, momentum=0.99)
-        imgCount = 0
-        success = 0
-        for epoch in range(1):  # loop over the dataset multiple times
-            running_loss = 0.0
+        for epoch in range(2):  # loop over the dataset multiple times
             # random.shuffle(DATALIST)
-            for i in range(len(DATALIST)):
-                for input in ShapeRecognizer.dataIntoTensor():
-                    input = input.view(784)
-                    input = input.to(torch.float32)
-                for target in ShapeRecognizer.getTarget():
-                    target = target.to(torch.float32)
-                ShapeRecognizer.showImgOnPlt()
-                # zero the parameter gradients
+            ShapeRecognizer.i = -1
+            print("epoch: ", epoch)
+            for i in range(60000):
+                ShapeRecognizer.i += 1
+                input =  ShapeRecognizer.getData(ShapeRecognizer.TrainData)
+                input = input.to(torch.float32)
+                target = ShapeRecognizer.getTarget(ShapeRecognizer.TrainList)
+                target = target.to(torch.float32)
+                # for img in ShapeRecognizer.showImg():
+                #     pass
+                
                 optimizer.zero_grad()
 
                 # forward + backward + optimize
-                output = self.forward(input)
-                loss = self.loss(output, target)
+                output = self.forward(input)   
+                loss: torch.Tensor = criterion(output, target)
                 loss.backward()
                 optimizer.step()
                 # print statistics
-                running_loss += loss.item()
-                print("train: \n")
-                print("guess: ", output)
-                print("real: ", target)
-                print("loss: ", loss.item())
-                if target == output.item():
-                    success += 1
-                imgCount += 1
-                print("img count: ", imgCount, "\n","success: ", success, "\n", "success rate: ", success / imgCount)
-                print("epoch: ", epoch)
-                print("\n")
+                # print("loss: ",loss.item())
+                print("photo: ", i)
+            ShapeRecognizer.TrainLabels.close()
+            ShapeRecognizer.TrainPhotos.close()
                 
-                    
+    def Test(self):
+        ShapeRecognizer.i = -1
+        score = 0
+        for i in range(10000):
+            ShapeRecognizer.i += 1
+            input =  ShapeRecognizer.getData(ShapeRecognizer.TestData)
+            input = input.to(torch.float32)
+            target = ShapeRecognizer.getTarget(ShapeRecognizer.TestList)
+            target = target.to(torch.float32)   
+            self.evaluate(input, target)
+            if self.evaluate(input, target)[0] == self.evaluate(input, target)[1]:
+                score += 1 
+            finalScore = score / 10000
+        print(finalScore)
+            
 
 
 REC = ShapeRecognizer()
-REC.train()
+REC.eval()
+REC.Train()
+REC.Test()
