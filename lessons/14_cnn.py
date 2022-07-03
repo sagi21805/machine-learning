@@ -83,7 +83,7 @@ for epoch in range(num_epochs):
         # input_layer: 3 input channels, 6 output channels, 5 kernel size
         images = images.to(device)
         labels = labels.to(device)
-
+        print(images.size())
         # Forward pass
         outputs = model(images)
         loss = criterion(outputs, labels)
