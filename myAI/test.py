@@ -1,29 +1,59 @@
 import numpy as np
 import struct
 import matplotlib.pyplot as plt
+from matplotlib import animation
 import os
 import torch
+import threading
+import cv2
+import time
 
-# PATH = "C:\\vscodeprojects\\python\\machine-learning\\MNIST_tarinData\\"
-# TRAINING_PHOTOS = os.listdir(PATH)[0]
-# TRAINING_LABELS = os.listdir(PATH)[1]
+PATH = ".\\DATA\\"
+TRAINING_PHOTOS = os.listdir(PATH)[2]
+TRAINING_LABELS = os.listdir(PATH)[3]
+TESTING_PHOTOS = os.listdir(PATH)[0]
+TESTING_LABELS = os.listdir(PATH)[1]
 
-# with open(PATH + TRAINING_PHOTOS,'rb') as file:
-#     magic, size = struct.unpack(">II", file.read(8))
-#     nrows, ncols = struct.unpack(">II", file.read(8))
-#     data1 = np.fromfile(file, dtype=np.dtype(np.uint8).newbyteorder('>'))
-#     data1 = data1.reshape((size, nrows * ncols))
-#     data1 = data1.reshape((size, nrows, ncols))
+TrainPhotos = open(PATH + TRAINING_PHOTOS,'rb')
+magic, size = struct.unpack(">II", TrainPhotos.read(8))
+nrows, ncols = struct.unpack(">II", TrainPhotos.read(8))
+TrainData = np.fromfile(TrainPhotos, dtype=np.dtype(np.uint8).newbyteorder('>'))
+TrainData = TrainData.reshape((size, nrows * ncols))
+
+TestPhotos = open(PATH + TESTING_PHOTOS,'rb')
+magic, size = struct.unpack(">II", TestPhotos.read(8))
+nrows, ncols = struct.unpack(">II", TestPhotos.read(8))
+TestData = np.fromfile(TestPhotos, dtype=np.dtype(np.uint8).newbyteorder('>'))
+TestData = TestData.reshape((size, nrows * ncols))
+
+def getData(data: list[list]) -> list[list]:
+    DataList: list[list] = []
+    for n in range(1):
+        pixelList = []
+        for i in data[n]:
+            i = i / 255
+            pixelList.append(i)
+        DataList.append(pixelList)
+    return torch.tensor(pixelList)
+
+IMAGE_SIZE = 500
 
 
-# with open(PATH + TRAINING_LABELS,'rb') as file:
-#     magic, numOfItems = struct.unpack(">II", file.read(8))
-#     print(magic, numOfItems)
-#     data = np.fromfile(file, dtype=np.dtype(np.uint8).newbyteorder('>'))
-#     print(data)
+plt.ion()
 
+fig1, ax1 = plt.subplots()
+
+# this example doesn't work because array only contains zeroes
+array = TrainData[0].reshape(28, 28)
+axim1 = ax1.imshow(array, cmap='gist_gray')
+
+
+del array
+
+for i in range(5000):
+    print(".", end="")
+    matrix = TrainData[i+1].reshape(28, 28)
     
-for i in range(60000):
-    print(i)
-    if i == 0:
-        break
+    axim1.set_data(matrix)
+    fig1.canvas.flush_events()
+print()

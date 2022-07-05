@@ -5,8 +5,9 @@ import os
 import struct
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
-PATH = "C:\\vscodeprojects\\python\\machine-learning\\DATA\\"
+PATH = ".\\DATA\\"
 TRAINING_PHOTOS = os.listdir(PATH)[2]
 TRAINING_LABELS = os.listdir(PATH)[3]
 TESTING_PHOTOS = os.listdir(PATH)[0]
@@ -16,13 +17,20 @@ class ShapeRecognizer(nn.Module):
     def __init__(self):
         super(ShapeRecognizer, self).__init__()
         self.convLayers = nn.Sequential(
-            nn.Conv2d(1, 6, 5),
+            nn.Conv2d(1, 4, 5),
             nn.ReLU(),
-            nn.Conv2d(6, 16, 5),
-            nn.MaxPool2d(2, 2)
+            nn.Conv2d(4, 16, 5),
+            nn.ReLU(),
+            nn.Conv2d(16, 64, 5),
+            nn.ReLU(),
+            nn.Conv2d(64, 256, 5),
+            nn.ReLU(),
+            nn.MaxPool2d(5, 5)
+            
+            # 97% = (1, 6, 5), (6, 16, 5)
         )
         self.linearLayers = nn.Sequential(
-            nn.Linear(1600, 16),
+            nn.Linear(1024, 16),
             # nn.Linear(784, 16),
             nn.ReLU(),
             nn.Linear(16, 16),
@@ -35,7 +43,7 @@ class ShapeRecognizer(nn.Module):
     
     def forward(self, input: torch.Tensor):
         input = self.convLayers(input)
-        input = input.view(-1 ,1600)
+        input = input.view(-1)
         input = self.linearLayers(input)
         return input
     
@@ -140,6 +148,9 @@ class ShapeRecognizer(nn.Module):
             print("didn't guess")
             return [1, 2, 0]
         
+    def visualizeData():
+        plt.show
+        
             
     def Train(self):
         criterion = nn.MSELoss()
@@ -155,11 +166,9 @@ class ShapeRecognizer(nn.Module):
                 input =  torch.tensor([DataList[ShapeRecognizer.i]])
                 input = input.to(torch.float32)
                 input = input.view(1, 1, 28, 28)
-                input = input.cuda()
                 # input = input.view(784)
                 target = ShapeRecognizer.getTarget(ShapeRecognizer.TrainList)
                 target = target.to(torch.float32)
-                target = target.cuda()
                 # for img in ShapeRecognizer.showImg():
                 #     pass
                 
@@ -168,12 +177,12 @@ class ShapeRecognizer(nn.Module):
                 # forward + backward + optimize
                 output = self.forward(input)   
                 loss: torch.Tensor = criterion(output, target)
-                loss = loss.cuda()
                 loss.backward()
                 optimizer.step()
                 # print statistics
                 # print("loss: ",loss.item())
-                print("[Epoch %s / 60000]" % i, end = "\r")
+                print("[Epoch %s / 60000]" % i+1 , end = "\r")
+            print("\n")
             ShapeRecognizer.TrainLabels.close()
             ShapeRecognizer.TrainPhotos.close()
                 
@@ -188,12 +197,10 @@ class ShapeRecognizer(nn.Module):
             input =  torch.tensor([DataList[ShapeRecognizer.i]])
             input = input.to(torch.float32)
             input = input.view(1, 1, 28, 28)
-            input = input.cuda()
             # input = input.view(784)
             target = ShapeRecognizer.getTarget(ShapeRecognizer.TestList)
             target = target.to(torch.float32) 
             target = target.view(10)  
-            target = target.cuda()
             self.evaluate(input, target)
             if self.evaluate(input, target)[0] == self.evaluate(input, target)[1]:
                 score += 1 
@@ -205,7 +212,6 @@ class ShapeRecognizer(nn.Module):
 
 
 REC = ShapeRecognizer()
-REC = REC.cuda()
 REC.eval()
 REC.Train()
 REC.Test()
