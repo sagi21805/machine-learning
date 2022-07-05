@@ -99,6 +99,7 @@ class ShapeRecognizer(nn.Module):
                 i = i / 255
                 pixelList.append(i)
             DataList.append(pixelList)
+            print(n)
         return DataList
     
     
@@ -148,8 +149,7 @@ class ShapeRecognizer(nn.Module):
             print("didn't guess")
             return [1, 2, 0]
         
-    def visualizeData():
-        plt.show
+
         
             
     def Train(self):
@@ -158,6 +158,11 @@ class ShapeRecognizer(nn.Module):
         print("Loading Data")
         print("\n")
         DataList = ShapeRecognizer.getData(ShapeRecognizer.TrainData)
+        # plt.ion()
+        # fig1, ax1 = plt.subplots()
+        # array = np.array(DataList[0]).reshape(28, 28)
+        # axim1 = ax1.imshow(array, cmap='gist_gray')
+        # del array
         for epoch in range(2):  # loop over the dataset multiple times
             # random.shuffle(DATALIST)
             ShapeRecognizer.i = -1
@@ -181,10 +186,14 @@ class ShapeRecognizer(nn.Module):
                 optimizer.step()
                 # print statistics
                 # print("loss: ",loss.item())
-                print("[Epoch %s / 60000]" % i+1 , end = "\r")
-            print("\n")
-            ShapeRecognizer.TrainLabels.close()
-            ShapeRecognizer.TrainPhotos.close()
+                print("[Epoch %s / 60000]" % i , end = "\r")
+                # matrix = np.array(DataList[ShapeRecognizer.i]).reshape(28, 28)
+                # axim1.set_data(matrix)
+                # fig1.canvas.flush_events()
+        ShapeRecognizer.TrainLabels.close()
+        ShapeRecognizer.TrainPhotos.close()
+        print("\n")
+
                 
     def Test(self):
         ShapeRecognizer.i = -1

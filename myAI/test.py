@@ -36,14 +36,11 @@ def getData(data: list[list]) -> list[list]:
         DataList.append(pixelList)
     return torch.tensor(pixelList)
 
-IMAGE_SIZE = 500
-
 
 plt.ion()
 
 fig1, ax1 = plt.subplots()
 
-# this example doesn't work because array only contains zeroes
 array = TrainData[0].reshape(28, 28)
 axim1 = ax1.imshow(array, cmap='gist_gray')
 
