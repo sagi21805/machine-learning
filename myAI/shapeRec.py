@@ -6,6 +6,8 @@ import struct
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+from PIL import Image
+import torchvision.transforms as transforms
 
 PATH = ".\\DATA\\"
 TRAINING_PHOTOS = os.listdir(PATH)[2]
@@ -62,12 +64,6 @@ class ShapeRecognizer(nn.Module):
     #     x: torch.Tensor = convert_tensor(img)
     #     return x
 
-    # def showImg(list: list, path: str):
-    #     img = mpimg.imread(path + list[ShapeRecognizer.i])
-    #     imgplot = plt.imshow(img)
-    #     plt.show()
-    #     plt.close()
-    #     yield ShapeRecognizer.iii
         
     # def converImgToCsv():
     #     for i in ShapeRecognizer.dataIntoTensor():
@@ -158,11 +154,11 @@ class ShapeRecognizer(nn.Module):
         print("Loading Data")
         print("\n")
         DataList = ShapeRecognizer.getData(ShapeRecognizer.TrainData)
-        # plt.ion()
-        # fig1, ax1 = plt.subplots()
-        # array = np.array(DataList[0]).reshape(28, 28)
-        # axim1 = ax1.imshow(array, cmap='gist_gray')
-        # del array
+        plt.ion()
+        fig1, ax1 = plt.subplots()
+        array = np.array(DataList[0]).reshape(28, 28)
+        axim1 = ax1.imshow(array, cmap='gist_gray')
+        del array
         for epoch in range(2):  # loop over the dataset multiple times
             # random.shuffle(DATALIST)
             ShapeRecognizer.i = -1
@@ -187,12 +183,13 @@ class ShapeRecognizer(nn.Module):
                 # print statistics
                 # print("loss: ",loss.item())
                 print("[Epoch %s / 60000]" % i , end = "\r")
-                # matrix = np.array(DataList[ShapeRecognizer.i]).reshape(28, 28)
-                # axim1.set_data(matrix)
-                # fig1.canvas.flush_events()
+                matrix = np.array(DataList[ShapeRecognizer.i]).reshape(28, 28)
+                axim1.set_data(matrix)
+                fig1.canvas.flush_events()
+            print("\n")
+
         ShapeRecognizer.TrainLabels.close()
         ShapeRecognizer.TrainPhotos.close()
-        print("\n")
 
                 
     def Test(self):
