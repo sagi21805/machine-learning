@@ -4,7 +4,7 @@ import torch.optim as optim
 import os
 import applyMyOwnFilter as fillter
 import data
-
+import numpy as np
 PATH = ".\\DATA\\"
 TRAINING_PHOTOS = os.listdir(PATH)[2]
 TRAINING_LABELS = os.listdir(PATH)[3]
@@ -113,7 +113,7 @@ class Recognizer(nn.Module):
         for i in range(10000):
             Recognizer.i += 1
             input = data.changeScale(data.TrainData[Recognizer.i])
-            input = torch.tensor(fillter.ApplyFillter(Recognizer.i, input, 3, 3, [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
+            input = torch.tensor(fillter.ApplyFillter(Recognizer.i, np.array(input), 3, 3, [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
             input = input.to(torch.float32)
             input = input.view(1, 1, 25, 25)
             
