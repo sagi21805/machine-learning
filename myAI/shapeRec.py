@@ -2,12 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import os
-import struct
-import numpy as np
-import time
-import matplotlib.pyplot as plt
-from PIL import Image
-import torchvision.transforms as transforms
+import applyMyOwnFilter as fillter
+import data
 
 PATH = ".\\DATA\\"
 TRAINING_PHOTOS = os.listdir(PATH)[2]
@@ -32,7 +28,7 @@ class ShapeRecognizer(nn.Module):
             # 97% = (1, 6, 5), (6, 16, 5)
         )
         self.linearLayers = nn.Sequential(
-            nn.Linear(1024, 16),
+            nn.Linear(256, 16),
             # nn.Linear(784, 16),
             nn.ReLU(),
             nn.Linear(16, 16),
@@ -49,69 +45,7 @@ class ShapeRecognizer(nn.Module):
         input = self.linearLayers(input)
         return input
     
-    # i = -1
-    # def getTarget(list: list):
-    #     targetList = [0, 0, 0, 0, 0, 0, 0]
-    #     target = int(list[ShapeRecognizer.i].split(".")[0])
-    #     targetList[target] = 1
-    #     targetTensor = torch.tensor(targetList)
-    #     # yield torch.tensor([int(DATALIST[ShapeRecognizer.i].split(".")[0])])
-    #     return targetTensor
-
-    # def dataIntoTensor(list: list, path: str):
-    #     img = Image.open(path + list[ShapeRecognizer.i])
-    #     convert_tensor = transforms.ToTensor()
-    #     x: torch.Tensor = convert_tensor(img)
-    #     return x
-
-        
-    # def converImgToCsv():
-    #     for i in ShapeRecognizer.dataIntoTensor():
-    #         imgTensor_np = i.numpy()
-    #         imgTensor_np = imgTensor_np.reshape(784)
-    #         dataFrame = pd.DataFrame(imgTensor_np)
-    #         dataFrame.to_csv("testfile", index=False)
-    #         dataFrame = pd.read_csv("testfile")
-    #         yield dataFrame
     i = -1
-    
-    TrainPhotos = open(PATH + TRAINING_PHOTOS,'rb')
-    magic, size = struct.unpack(">II", TrainPhotos.read(8))
-    nrows, ncols = struct.unpack(">II", TrainPhotos.read(8))
-    TrainData = np.fromfile(TrainPhotos, dtype=np.dtype(np.uint8).newbyteorder('>'))
-    TrainData = TrainData.reshape((size, nrows * ncols))
-    
-    TestPhotos = open(PATH + TESTING_PHOTOS,'rb')
-    magic, size = struct.unpack(">II", TestPhotos.read(8))
-    nrows, ncols = struct.unpack(">II", TestPhotos.read(8))
-    TestData = np.fromfile(TestPhotos, dtype=np.dtype(np.uint8).newbyteorder('>'))
-    TestData = TestData.reshape((size, nrows * ncols))
-    
-    def getData(data: list[list]) -> list[list]:
-        DataList: list[list] = []
-        for n in range(len(data)):
-            pixelList = []
-            for i in data[n]:
-                i = i / 255
-                pixelList.append(i)
-            DataList.append(pixelList)
-            print(n)
-        return DataList
-    
-    
-    TrainLabels = open(PATH + TRAINING_LABELS,'rb')
-    magic, numOfItems = struct.unpack(">II", TrainLabels.read(8))
-    TrainList = np.fromfile(TrainLabels, dtype=np.dtype(np.uint8).newbyteorder('>'))
-    
-    TestLabels = open(PATH + TESTING_LABELS,'rb')
-    magic, numOfItems = struct.unpack(">II", TestLabels.read(8))
-    TestList = np.fromfile(TestLabels, dtype=np.dtype(np.uint8).newbyteorder('>'))
-    
-    def getTarget(TargetList) -> torch.Tensor:
-        list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        list[TargetList[ShapeRecognizer.i]] = 1
-        TargetTensor = torch.tensor(list)
-        return TargetTensor
 
     def evaluate(self, input: torch.Tensor, target: list):
         for i, number in enumerate(target):
@@ -128,14 +62,8 @@ class ShapeRecognizer(nn.Module):
             if item.item() > highest:
                 highest = item
                 guess = i
-        try:
             highest = highest.item()
-        except:
-            pass
-        try:
             sum = sum.item()
-        except:
-            pass
         try:
             print("guess: ", guess, "\ncertenty: ", highest / sum, "\ntraget: ", target, "\n")
             if (highest / sum) == 1:
@@ -153,58 +81,51 @@ class ShapeRecognizer(nn.Module):
         optimizer = optim.SGD(self.parameters(), lr=0.001, momentum = 0.9)
         print("Loading Data")
         print("\n")
-        DataList = ShapeRecognizer.getData(ShapeRecognizer.TrainData)
-        plt.ion()
-        fig1, ax1 = plt.subplots()
-        array = np.array(DataList[0]).reshape(28, 28)
-        axim1 = ax1.imshow(array, cmap='gist_gray')
-        del array
-        for epoch in range(2):  # loop over the dataset multiple times
-            # random.shuffle(DATALIST)
+        # plt.ion()
+        # fig1, ax1 = plt.subplots()
+        # array = np.array(DataList[0]).reshape(28, 28)
+        # axim1 = ax1.imshow(array, cmap='gist_gray')
+        # del array
+        for epoch in range(2):
             ShapeRecognizer.i = -1
             for i in range(60000):
                 ShapeRecognizer.i += 1
-                input =  torch.tensor([DataList[ShapeRecognizer.i]])
+                input = data.changeScale(data.TrainData[ShapeRecognizer.i])
+                input = torch.tensor(fillter.ApplyFillter(ShapeRecognizer.i, input, (3, 3), [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
                 input = input.to(torch.float32)
-                input = input.view(1, 1, 28, 28)
-                # input = input.view(784)
-                target = ShapeRecognizer.getTarget(ShapeRecognizer.TrainList)
+                input = input.view(1, 1, 25, 25)
+                target = data.getTarget(data.TrainList, ShapeRecognizer.i)
                 target = target.to(torch.float32)
-                # for img in ShapeRecognizer.showImg():
-                #     pass
                 
                 optimizer.zero_grad()
-
-                # forward + backward + optimize
                 output = self.forward(input)   
                 loss: torch.Tensor = criterion(output, target)
                 loss.backward()
                 optimizer.step()
-                # print statistics
-                # print("loss: ",loss.item())
-                print("[Epoch %s / 60000]" % i , end = "\r")
-                matrix = np.array(DataList[ShapeRecognizer.i]).reshape(28, 28)
-                axim1.set_data(matrix)
-                fig1.canvas.flush_events()
+                x = i + 1
+                print("[img %s / 60000]" % x , end = "\r")
+                # matrix = np.array(DataList[ShapeRecognizer.i]).reshape(28, 28)
+                # axim1.set_data(matrix)
+                # fig1.canvas.flush_events()
             print("\n")
 
-        ShapeRecognizer.TrainLabels.close()
-        ShapeRecognizer.TrainPhotos.close()
+        data.TrainLabels.close()
+        data.TrainPhotos.close()
 
                 
     def Test(self):
         ShapeRecognizer.i = -1
         score = 0
         print("loading TestData")
-        DataList = ShapeRecognizer.getData(ShapeRecognizer.TestData)
         exactGuess = 0
         for i in range(10000):
             ShapeRecognizer.i += 1
-            input =  torch.tensor([DataList[ShapeRecognizer.i]])
+            input = data.changeScale(data.TrainData[ShapeRecognizer.i])
+            input = torch.tensor(fillter.ApplyFillter(ShapeRecognizer.i, input, 3, 3, [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
             input = input.to(torch.float32)
-            input = input.view(1, 1, 28, 28)
-            # input = input.view(784)
-            target = ShapeRecognizer.getTarget(ShapeRecognizer.TestList)
+            input = input.view(1, 1, 25, 25)
+            
+            target = data.getTarget(data.TestList, ShapeRecognizer.i)
             target = target.to(torch.float32) 
             target = target.view(10)  
             self.evaluate(input, target)
@@ -214,12 +135,13 @@ class ShapeRecognizer(nn.Module):
             self.finalScore = (score / 10000) * 100
         print(self.finalScore) 
         print(exactGuess)
+        data.TestPhotos.close()
+        data.TestLabels.close()
             
-
-
-REC = ShapeRecognizer()
-REC.eval()
-REC.Train()
-REC.Test()
-FILE = "numberRec%s.pth" % REC.finalScore
-torch.save(REC, FILE)
+if __name__ == "__main__":
+    REC = ShapeRecognizer()
+    REC.eval()
+    REC.Train()
+    REC.Test()
+    FILE = "numberRec%s.pth" % REC.finalScore
+    torch.save(REC, FILE)
