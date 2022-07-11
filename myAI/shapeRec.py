@@ -11,25 +11,20 @@ TRAINING_LABELS = os.listdir(PATH)[3]
 TESTING_PHOTOS = os.listdir(PATH)[0]
 TESTING_LABELS = os.listdir(PATH)[1]
 DEVICE = torch.device
-class ShapeRecognizer(nn.Module):
+class Recognizer(nn.Module):
     def __init__(self):
-        super(ShapeRecognizer, self).__init__()
+        super().__init__()
         self.convLayers = nn.Sequential(
             nn.Conv2d(1, 4, 5),
             nn.ReLU(),
             nn.Conv2d(4, 16, 5),
             nn.ReLU(),
-            nn.Conv2d(16, 64, 5),
-            nn.ReLU(),
-            nn.Conv2d(64, 256, 5),
-            nn.ReLU(),
-            nn.MaxPool2d(5, 5)
+            nn.MaxPool2d(3, 3)
             
             # 97% = (1, 6, 5), (6, 16, 5)
         )
         self.linearLayers = nn.Sequential(
-            nn.Linear(256, 16),
-            # nn.Linear(784, 16),
+            nn.Linear(400, 16),
             nn.ReLU(),
             nn.Linear(16, 16),
             nn.ReLU(),
@@ -87,14 +82,14 @@ class ShapeRecognizer(nn.Module):
         # axim1 = ax1.imshow(array, cmap='gist_gray')
         # del array
         for epoch in range(2):
-            ShapeRecognizer.i = -1
+            Recognizer.i = -1
             for i in range(60000):
-                ShapeRecognizer.i += 1
-                input = data.changeScale(data.TrainData[ShapeRecognizer.i])
-                input = torch.tensor(fillter.ApplyFillter(ShapeRecognizer.i, input, (3, 3), [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
+                Recognizer.i += 1
+                input = data.changeScale(data.TrainData[Recognizer.i])
+                input = torch.tensor(fillter.ApplyFillter(Recognizer.i, input, (3, 3), [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
                 input = input.to(torch.float32)
                 input = input.view(1, 1, 25, 25)
-                target = data.getTarget(data.TrainList, ShapeRecognizer.i)
+                target = data.getTarget(data.TrainList, Recognizer.i)
                 target = target.to(torch.float32)
                 
                 optimizer.zero_grad()
@@ -104,28 +99,25 @@ class ShapeRecognizer(nn.Module):
                 optimizer.step()
                 x = i + 1
                 print("[img %s / 60000]" % x , end = "\r")
-                # matrix = np.array(DataList[ShapeRecognizer.i]).reshape(28, 28)
+                # matrix = np.array(DataList[Recognizer.i]).reshape(28, 28)
                 # axim1.set_data(matrix)
                 # fig1.canvas.flush_events()
             print("\n")
 
-        data.TrainLabels.close()
-        data.TrainPhotos.close()
-
                 
     def Test(self):
-        ShapeRecognizer.i = -1
+        Recognizer.i = -1
         score = 0
         print("loading TestData")
         exactGuess = 0
         for i in range(10000):
-            ShapeRecognizer.i += 1
-            input = data.changeScale(data.TrainData[ShapeRecognizer.i])
-            input = torch.tensor(fillter.ApplyFillter(ShapeRecognizer.i, input, 3, 3, [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
+            Recognizer.i += 1
+            input = data.changeScale(data.TrainData[Recognizer.i])
+            input = torch.tensor(fillter.ApplyFillter(Recognizer.i, input, 3, 3, [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
             input = input.to(torch.float32)
             input = input.view(1, 1, 25, 25)
             
-            target = data.getTarget(data.TestList, ShapeRecognizer.i)
+            target = data.getTarget(data.TestList, Recognizer.i)
             target = target.to(torch.float32) 
             target = target.view(10)  
             self.evaluate(input, target)
@@ -135,11 +127,10 @@ class ShapeRecognizer(nn.Module):
             self.finalScore = (score / 10000) * 100
         print(self.finalScore) 
         print(exactGuess)
-        data.TestPhotos.close()
-        data.TestLabels.close()
+
             
 if __name__ == "__main__":
-    REC = ShapeRecognizer()
+    REC = Recognizer()
     REC.eval()
     REC.Train()
     REC.Test()

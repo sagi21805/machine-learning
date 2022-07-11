@@ -45,6 +45,11 @@ TestLabels = open(PATH + TESTING_LABELS,'rb')
 magic, numOfItems = struct.unpack(">II", TestLabels.read(8))
 TestList = np.fromfile(TestLabels, dtype=np.dtype(np.uint8).newbyteorder('>'))
 
+TrainPhotos.close()
+TestPhotos.close()
+TrainLabels.close()
+TestLabels.close()
+
 def changeScale(data: list) -> list:
     DataList: list[list] = []
     for i in data:
