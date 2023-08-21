@@ -1,0 +1,3 @@
+/home/sagi21805/Desktop/Vscode/machine-learning/build/CMakeFiles/rebuild_cache.dir
+/home/sagi21805/Desktop/Vscode/machine-learning/build/CMakeFiles/edit_cache.dir
+/home/sagi21805/Desktop/Vscode/machine-learning/build/CMakeFiles/main.dir
