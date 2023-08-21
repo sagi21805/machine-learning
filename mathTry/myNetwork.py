@@ -4,7 +4,7 @@ class Network():
     
     def __init__(self, network_size: list) -> None:
         self.size = network_size
-        self.num_of_layers = len(network_size)
+        self.numg_of_layers = len(network_size)
         self.biases = [np.random.randn(size, 1) for size in network_size[1:]]
         self.weights = [np.random.randn(k, j) for k, j in zip(network_size[1:], network_size)]
 
