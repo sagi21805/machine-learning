@@ -1,12 +1,9 @@
 import torch
-import os
 import struct
 import numpy as np
 import torchvision.transforms as transforms
 from PIL import Image
-from numba import njit
-import matplotlib.pyplot as plt
-import time
+import cv2
 
     
 def getTarget_PNG(list: list, i:int):
@@ -35,11 +32,10 @@ def readBinaryLabels(path: str):
         return np.fromfile(labels, dtype=np.dtype(np.uint8).newbyteorder('>'))
 
 
-def getTarget(labelList: list, i: int) -> torch.Tensor:
-    list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    list[labelList[i]] = 1
-    TargetTensor = torch.tensor(list)
-    return TargetTensor
+def getTarget(index: int):
+    list = np.zeros((10, 1), dtype=np.uint8)
+    list[index][0] = 1
+    return list
 
 def getPrepredData(dataPath:str, labelpath:str):
     # prepered data is a list of (img, desired output)
@@ -48,5 +44,6 @@ def getPrepredData(dataPath:str, labelpath:str):
     if len(labelData) == len(imgData):
         preperedData = []
         for index in range(len(labelData)):
-            preperedData.append((imgData[index], labelData[index]))
+            preperedData.append((np.array(imgData[index]), getTarget(labelData[index])))
     return preperedData
+

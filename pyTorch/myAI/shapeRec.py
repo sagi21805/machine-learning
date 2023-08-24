@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import os
 import applyMyOwnFilter as fillter
-import mnistData
+import mathTry.data as data
 import numpy as np
 PATH = ".\\DATA\\"
 TRAINING_PHOTOS = os.listdir(PATH)[2]

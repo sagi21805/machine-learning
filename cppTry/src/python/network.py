@@ -1,6 +1,6 @@
 import numpy as np
 import random
-import mnistData
+import mathTry.data as data
 import matplotlib.pyplot as plt
 
 class Network():
@@ -116,8 +116,8 @@ def ReLu(z):
     if z > 0: return z
     else: return 0 
 
-training_data = mnistData.getPrepredData(r"C:\VsCode\multiLang\machineLearning\MnistDataFiles\train-images.idx3-ubyte", r"C:\VsCode\multiLang\machineLearning\MnistDataFiles\train-labels.idx1-ubyte")
-test_data = mnistData.getPrepredData(r"C:\VsCode\multiLang\machineLearning\MnistDataFiles\t10k-images.idx3-ubyte", r"C:\VsCode\multiLang\machineLearning\MnistDataFiles\t10k-labels.idx1-ubyte")
+training_data = data.getPrepredData(r"C:\VsCode\multiLang\machineLearning\MnistDataFiles\train-images.idx3-ubyte", r"C:\VsCode\multiLang\machineLearning\MnistDataFiles\train-labels.idx1-ubyte")
+test_data = data.getPrepredData(r"C:\VsCode\multiLang\machineLearning\MnistDataFiles\t10k-images.idx3-ubyte", r"C:\VsCode\multiLang\machineLearning\MnistDataFiles\t10k-labels.idx1-ubyte")
 
 print("finished scanning")
 
