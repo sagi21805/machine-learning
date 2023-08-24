@@ -15,6 +15,9 @@ import random
 
 # Third-party libraries
 import numpy as np
+import random
+import mnistData
+import matplotlib.pyplot as plt
 
 class Network(object):
 

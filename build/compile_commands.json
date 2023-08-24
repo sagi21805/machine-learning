@@ -1,0 +1,19 @@
+[
+{
+  "directory": "/home/sagi21805/Desktop/Vscode/machine-learning/build",
+  "command": "/usr/bin/g++   -I/home/sagi21805/Desktop/Vscode/machine-learning/cppTry -I/home/sagi21805/Desktop/Vscode/machine-learning/cppTry/include -I/home/sagi21805/Desktop/Vscode/machine-learning/cppTry/src/c++ -isystem /usr/local/include/opencv4  -O3 -Wall -Wextra -g   -o CMakeFiles/main.dir/src/c++/matrix.cpp.o -c /home/sagi21805/Desktop/Vscode/machine-learning/cppTry/src/c++/matrix.cpp",
+  "file": "/home/sagi21805/Desktop/Vscode/machine-learning/cppTry/src/c++/matrix.cpp"
+},
+
+{
+  "directory": "/home/sagi21805/Desktop/Vscode/machine-learning/build",
+  "command": "/usr/bin/g++   -I/home/sagi21805/Desktop/Vscode/machine-learning/cppTry -I/home/sagi21805/Desktop/Vscode/machine-learning/cppTry/include -I/home/sagi21805/Desktop/Vscode/machine-learning/cppTry/src/c++ -isystem /usr/local/include/opencv4  -O3 -Wall -Wextra -g   -o CMakeFiles/main.dir/src/c++/network.cpp.o -c /home/sagi21805/Desktop/Vscode/machine-learning/cppTry/src/c++/network.cpp",
+  "file": "/home/sagi21805/Desktop/Vscode/machine-learning/cppTry/src/c++/network.cpp"
+},
+
+{
+  "directory": "/home/sagi21805/Desktop/Vscode/machine-learning/build",
+  "command": "/usr/bin/g++   -I/home/sagi21805/Desktop/Vscode/machine-learning/cppTry -I/home/sagi21805/Desktop/Vscode/machine-learning/cppTry/include -I/home/sagi21805/Desktop/Vscode/machine-learning/cppTry/src/c++ -isystem /usr/local/include/opencv4  -O3 -Wall -Wextra -g   -o CMakeFiles/main.dir/src/c++/vector.cpp.o -c /home/sagi21805/Desktop/Vscode/machine-learning/cppTry/src/c++/vector.cpp",
+  "file": "/home/sagi21805/Desktop/Vscode/machine-learning/cppTry/src/c++/vector.cpp"
+}
+]
