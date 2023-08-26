@@ -24,7 +24,7 @@ def readBinaryData(path: str):
         magic, size = struct.unpack(">II", photos.read(8)) #first 8 bits are magic number (random number) and the size of the Data
         nrows, ncols = struct.unpack(">II", photos.read(8))
         data = np.fromfile(photos, dtype=np.dtype(np.uint8).newbyteorder('>'))
-        return (data.reshape((size, nrows * ncols, 1))) 
+        return (data.reshape((size, nrows * ncols, 1))) / 255
 
 def readBinaryLabels(path: str):
     with open(path ,'rb') as labels:
@@ -32,9 +32,9 @@ def readBinaryLabels(path: str):
         return np.fromfile(labels, dtype=np.dtype(np.uint8).newbyteorder('>'))
 
 
-def getTarget(index: int):
-    list = np.zeros((10, 1), dtype=np.uint8)
-    list[index][0] = 1
+def vectorizeResult(index: int):
+    list = np.zeros((10, 1))
+    list[index] = 1.0
     return list
 
 def getPrepredData(dataPath:str, labelpath:str):
@@ -44,6 +44,7 @@ def getPrepredData(dataPath:str, labelpath:str):
     if len(labelData) == len(imgData):
         preperedData = []
         for index in range(len(labelData)):
-            preperedData.append((np.array(imgData[index]), getTarget(labelData[index])))
+            preperedData.append((np.array(imgData[index]), vectorizeResult(labelData[index])))
+
     return preperedData
 

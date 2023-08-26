@@ -1,6 +1,9 @@
+# %load network.py
+
 """
 network.py
 ~~~~~~~~~~
+IT WORKS
 
 A module to implement the stochastic gradient descent learning
 algorithm for a feedforward neural network.  Gradients are calculated
@@ -15,8 +18,7 @@ import random
 
 # Third-party libraries
 import numpy as np
-import random
-import matplotlib.pyplot as plt
+import data
 
 class Network(object):
 
@@ -34,7 +36,8 @@ class Network(object):
         self.num_layers = len(sizes)
         self.sizes = sizes
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
+        self.weights = [np.random.randn(y, x)
+                        for x, y in zip(sizes[:-1], sizes[1:])]
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
@@ -52,18 +55,25 @@ class Network(object):
         network will be evaluated against the test data after each
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
-        if test_data: n_test = len(test_data)
+
+        training_data = list(training_data)
         n = len(training_data)
+
+        if test_data:
+            test_data = list(test_data)
+            n_test = len(test_data)
+
         for j in range(epochs):
             random.shuffle(training_data)
-            mini_batches = [training_data[k:k+mini_batch_size]
+            mini_batches = [
+                training_data[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
-                print ("Epoch {0}: {1} / {2}".format(j, self.evaluate(test_data), n_test))
+                print("Epoch {} : {} / {}".format(j,self.evaluate(test_data),n_test))
             else:
-                print("Epoch {0} complete".format(j))
+                print("Epoch {} complete".format(j))
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
@@ -79,7 +89,7 @@ class Network(object):
         self.weights = [w-(eta/len(mini_batch))*nw
                         for w, nw in zip(self.weights, nabla_w)]
         self.biases = [b-(eta/len(mini_batch))*nb
-                       for b, nb in zip(self.biases, nabla_b)]
+                    for b, nb in zip(self.biases, nabla_b)]
 
     def backprop(self, x, y):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
@@ -98,8 +108,7 @@ class Network(object):
             activation = sigmoid(z)
             activations.append(activation)
         # backward pass
-        delta = self.cost_derivative(activations[-1], y) * \
-            sigmoid_prime(zs[-1])
+        delta = self.cost_derivative(activations[-1], y) * sigmoid_prime(zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -121,8 +130,8 @@ class Network(object):
         network outputs the correct result. Note that the neural
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
-        test_results = [(np.argmax(self.feedforward(x)), y)
-                        for (x, y) in test_data]
+        test_results = [(np.argmax(self.feedforward(testImg)), np.argmax(vectorizedLabel)) for (testImg, vectorizedLabel) in test_data]
+
         return sum(int(x == y) for (x, y) in test_results)
 
     def cost_derivative(self, output_activations, y):
@@ -138,3 +147,8 @@ def sigmoid(z):
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
+
+net = Network([784, 100, 10])
+trainingData = data.getPrepredData(r"C:\VsCode\python\machineLearning\machine-learning\.MnistDataFiles\train-images.idx3-ubyte", r"C:\VsCode\python\machineLearning\machine-learning\.MnistDataFiles\train-labels.idx1-ubyte")
+testData = data.getPrepredData(r"C:\VsCode\python\machineLearning\machine-learning\.MnistDataFiles\t10k-images.idx3-ubyte", r"C:\VsCode\python\machineLearning\machine-learning\.MnistDataFiles\t10k-labels.idx1-ubyte")
+net.SGD(trainingData, 30, 10, 3.0, test_data=testData)
