@@ -4,6 +4,7 @@ import data
 import matplotlib.pyplot as plt
 import time
 import pickle
+import cv2
 
 class Network():
     
@@ -119,16 +120,16 @@ class Network():
         return 2*(output_activations-y)
     
     def saveWeightsAndBiases(self, fileName:str):
-        with open(f"{fileName} weights", "wb") as weights:
+        with open(f"W{fileName}", "wb") as weights:
             pickle.dump(self.weights, weights)
-        with open(f"{fileName} biases", "wb") as biases:
+        with open(f"B{fileName}", "wb") as biases:
             pickle.dump(self.biases, biases)
         print("saved")
 
-    def loadWeightsAndBiases(self, fileName:str):
-        with open(f"{fileName} weights", "rb") as weights:
+    def loadWeightsAndBiases(self, fileNameW:str, fileNameB):
+        with open(f"{fileNameW}", "rb") as weights:
             self.weights = pickle.load(weights)
-        with open(f"{fileName} biases", "rb") as biases:
+        with open(f"{fileNameB}", "rb") as biases:
             self.biases = pickle.load(biases)
         print("loaded")
     
@@ -141,10 +142,22 @@ def sigmoid_prime(z):
 
 
 
-net = Network([784, 100, 10])
+net = Network([784, 16, 16, 10])
 trainingData = data.getPrepredData(r"C:\VsCode\python\machineLearning\machine-learning\.MnistDataFiles\train-images.idx3-ubyte", r"C:\VsCode\python\machineLearning\machine-learning\.MnistDataFiles\train-labels.idx1-ubyte")
 testData = data.getPrepredData(r"C:\VsCode\python\machineLearning\machine-learning\.MnistDataFiles\t10k-images.idx3-ubyte", r"C:\VsCode\python\machineLearning\machine-learning\.MnistDataFiles\t10k-labels.idx1-ubyte")
 
-net.SGD(trainingData, 30, 10, 3.1, test_data=testData, visualize=True)
-if net.successRate > 95:
-    net.saveWeightsAndBiases("test")
+
+# net.SGD(trainingData, 10, 10, 3.1, test_data=testData, visualize=False)
+# if net.successRate > 90:
+#     net.saveWeightsAndBiases(f"{net.size}-{net.successRate}.pickle")
+
+net.loadWeightsAndBiases(r"C:\VsCode\python\machineLearning\machine-learning\mathTry\W[784, 16, 16, 10]-93.56.pickle", r"C:\VsCode\python\machineLearning\machine-learning\mathTry\B[784, 16, 16, 10]-93.56.pickle")
+img = cv2.cvtColor(cv2.imread(r"C:\VsCode\python\machineLearning\machine-learning\mathTry\testImages\test.png"), cv2.COLOR_BGR2GRAY) / 255
+output = net.feedforward(np.reshape(img, (784, 1)))
+print(np.argmax(output))
+print(f"{np.max(output) / sum(output)}")
+plt.imshow(img, cmap='gist_gray')
+plt.show()
+
+
+
