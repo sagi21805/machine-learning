@@ -1,12 +1,8 @@
 import torch
-import os
 import struct
 import numpy as np
 import torchvision.transforms as transforms
 from PIL import Image
-from numba import njit
-import matplotlib.pyplot as plt
-import time
 
     
 def getTarget_PNG(list: list, i:int):
@@ -27,7 +23,7 @@ def readBinaryData(path: str):
         magic, size = struct.unpack(">II", photos.read(8)) #first 8 bits are magic number (random number) and the size of the Data
         nrows, ncols = struct.unpack(">II", photos.read(8))
         data = np.fromfile(photos, dtype=np.dtype(np.uint8).newbyteorder('>'))
-        return (data.reshape((size, nrows * ncols, 1))) 
+        return (data.reshape((size, nrows * ncols, 1))) / 255
 
 def readBinaryLabels(path: str):
     with open(path ,'rb') as labels:

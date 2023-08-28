@@ -16,8 +16,8 @@ import random
 # Third-party libraries
 import numpy as np
 import random
-import mnistData
 import matplotlib.pyplot as plt
+import dataManage
 
 class Network(object):
 
@@ -34,8 +34,8 @@ class Network(object):
         ever used in computing the outputs from later layers."""
         self.num_layers = len(sizes)
         self.sizes = sizes
-        self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
+        self.biases = [np.random.uniform(-1, 1, (y, 1)) for y in sizes[1:]]
+        self.weights = [np.random.uniform(-1, 1, (y, x)) for x, y in zip(sizes[:-1], sizes[1:])]
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
@@ -43,8 +43,7 @@ class Network(object):
             a = sigmoid(np.dot(w, a)+b)
         return a
 
-    def SGD(self, training_data, epochs, mini_batch_size, eta,
-            test_data=None):
+    def SGD(self, training_data, epochs, mini_batch_size, eta,test_data=None):
         """Train the neural network using mini-batch stochastic
         gradient descent.  The ``training_data`` is a list of tuples
         ``(x, y)`` representing the training inputs and the desired
@@ -100,7 +99,7 @@ class Network(object):
             activations.append(activation)
         # backward pass
         delta = self.cost_derivative(activations[-1], y) * \
-            sigmoid_prime(zs[-1])
+        sigmoid_prime(zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -122,8 +121,7 @@ class Network(object):
         network outputs the correct result. Note that the neural
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
-        test_results = [(np.argmax(self.feedforward(x)), y)
-                        for (x, y) in test_data]
+        test_results = [(np.argmax(self.feedforward(x)), y) for (x, y) in test_data]
         return sum(int(x == y) for (x, y) in test_results)
 
     def cost_derivative(self, output_activations, y):
@@ -134,8 +132,16 @@ class Network(object):
 #### Miscellaneous functions
 def sigmoid(z):
     """The sigmoid function."""
+    # z = np.array(z, dtype=np.float128)
     return 1.0/(1.0+np.exp(-z))
 
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
+
+net = Network([784, 100, 10])
+
+trainingData = dataManage.getPrepredData(r"/home/sagi21805/Desktop/Vscode/machine-learning/.MnistDataFiles/train-images.idx3-ubyte", r"/home/sagi21805/Desktop/Vscode/machine-learning/.MnistDataFiles/train-labels.idx1-ubyte")
+testData = dataManage.getPrepredData(r"/home/sagi21805/Desktop/Vscode/machine-learning/.MnistDataFiles/t10k-images.idx3-ubyte", r"/home/sagi21805/Desktop/Vscode/machine-learning/.MnistDataFiles/t10k-labels.idx1-ubyte")
+
+net.SGD(trainingData, 30, 10, 3.0, test_data=testData)

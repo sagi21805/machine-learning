@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import os
 import applyMyOwnFilter as fillter
-import mnistData
+import mathTry.dataManage as dataManage
 import numpy as np
 PATH = ".\\DATA\\"
 TRAINING_PHOTOS = os.listdir(PATH)[2]
@@ -85,11 +85,11 @@ class Recognizer(nn.Module):
             Recognizer.i = -1
             for i in range(60000):
                 Recognizer.i += 1
-                input = data.changeScale(data.TrainData[Recognizer.i])
+                input = dataManage.changeScale(dataManage.TrainData[Recognizer.i])
                 input = torch.tensor(fillter.ApplyFillter(Recognizer.i, input, (3, 3), [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
                 input = input.to(torch.float32)
                 input = input.view(1, 1, 25, 25)
-                target = data.getTarget(data.TrainList, Recognizer.i)
+                target = dataManage.getTarget(dataManage.TrainList, Recognizer.i)
                 target = target.to(torch.float32)
                 
                 optimizer.zero_grad()
@@ -112,12 +112,12 @@ class Recognizer(nn.Module):
         exactGuess = 0
         for i in range(10000):
             Recognizer.i += 1
-            input = data.changeScale(data.TrainData[Recognizer.i])
+            input = dataManage.changeScale(dataManage.TrainData[Recognizer.i])
             input = torch.tensor(fillter.ApplyFillter(Recognizer.i, np.array(input), 3, 3, [[0,-2, 0], [-1, 2, -1], [0, 2, 0]], 28, 28))
             input = input.to(torch.float32)
             input = input.view(1, 1, 25, 25)
             
-            target = data.getTarget(data.TestList, Recognizer.i)
+            target = dataManage.getTarget(dataManage.TestList, Recognizer.i)
             target = target.to(torch.float32) 
             target = target.view(10)  
             self.evaluate(input, target)
