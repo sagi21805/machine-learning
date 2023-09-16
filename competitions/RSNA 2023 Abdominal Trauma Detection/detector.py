@@ -1,115 +1,142 @@
-import tensorflow as tf
+import os
+import platform
+import time
 import numpy as np
-import pandas as pd 
-
-#gameplan -->
-    #for each id, pass all the images through the net,
-    #for each img collect the result 
-    #sum the result and devide by the total imgs of the patient
-    #soft max the vals of the liver, spleen, and kidney 
-    #sigmoid the values of the bowl and extravasation and 1 - healthy for the injury
-
+import pandas as pd
+import tensorflow as tf
+st = time.time()
 
 config = {
-    "SEED" : 42, 
-    "IMAGE_SHAPE" : [256, 256] , 
-    "BATCH_SIZE" : 1, 
-    "EPOCHS" : 1,
-    "TARGET_CLASSES"  : [
-        
-        "bowel_injury", #bowel_healthy is just 1 - the chance of the injury
-        "extravasation_injury", #bextravasation_healthy is just 1 - the chance of the injury
+    'SEED' : 42,
+    'IMAGE_SIZE' : [256, 256],
+    'BATCH_SIZE' : 10,
+    'EPOCHS' : 10,
+    'TARGET_CLASSES'  : [
+        "patient_id",
+        "bowel_injury", "extravasation_injury",
         "kidney_healthy", "kidney_low", "kidney_high",
         "liver_healthy", "liver_low", "liver_high",
         "spleen_healthy", "spleen_low", "spleen_high",
-        
     ],
-    "AUTOTUNE" : tf.data.AUTOTUNE
+
+    'AUTOTUNE' : tf.data.AUTOTUNE,
+    
+    'TRAIN_LABEL_PATH' : "/home/sagi21805/Desktop/Vscode/machine-learning/competitions/RSNA 2023 Abdominal Trauma Detection/train.csv",
+    'TRAIN_LABEL_PATH_WINDOWS' : r"C:\VsCode\python\machineLearning\machine-learning\competitions\RSNA 2023 Abdominal Trauma Detection\train.csv",
+    'TRAIN_IMG_PATH' : "/home/sagi21805/Desktop/Vscode/machine-learning/competitions/RSNA 2023 Abdominal Trauma Detection/rsna_256x256_jpeg",
+    'TRAIN_IMG_PATH_WINDOWS' : r"C:\VsCode\python\machineLearning\machine-learning\competitions\RSNA 2023 Abdominal Trauma Detection\rsna_256x256_jpeg"
 }
 
-def build_model():
-    # Define Input
-    inputs = tf.keras.Input(shape=config["IMAGE_SHAPE"] + [3, ], batch_size=config["BATCH_SIZE"])
-    
-    # Define Backbon
-    # Define 'necks' for each head
-    x_bowel = tf.keras.layers.Dense(32, activation='silu')(inputs)
-    x_extra = tf.keras.layers.Dense(32, activation='silu')(inputs)
-    x_kidney = tf.keras.layers.Dense(32, activation='silu')(inputs)
-    x_liver = tf.keras.layers.Dense(32, activation='silu')(inputs)
-    x_spleen =tf.keras.layers.Dense(32, activation='silu')(inputs)
+TRAIN_LABEL_PATH = config["TRAIN_LABEL_PATH_WINDOWS"] if platform.system() == "Windows" else config["TRAIN_LABEL_PATH"]
+TRAIN_IMG_PATH = config["TRAIN_IMG_PATH_WINDOWS"] if platform.system() == "Windows" else config["TRAIN_IMG_PATH"]
 
-    # Define heads
-    out_bowel = tf.keras.layers.Dense(1, name='bowel', activation='sigmoid')(x_bowel) # use sigmoid to convert predictions to [0-1]
-    out_extra = tf.keras.layers.Dense(1, name='extra', activation='sigmoid')(x_extra) # use sigmoid to convert predictions to [0-1]
-    out_kidney = tf.keras.layers.Dense(3, name='kidney', activation='softmax')(x_kidney) # use softmax for the kidney head
-    out_liver = tf.keras.layers.Dense(3, name='liver', activation='softmax')(x_liver) # use softmax for the liver head
-    out_spleen = tf.keras.layers.Dense(3, name='spleen', activation='softmax')(x_spleen) # use softmax for the spleen head
-    
-    # Concatenate the outputs
-    outputs = [out_bowel, out_extra,out_kidney, out_liver, out_spleen]
+train_data = pd.read_csv(TRAIN_LABEL_PATH); train_data = train_data.drop_duplicates()
 
-    # Create model
-    print("[INFO] Building the model...")
-    model = tf.keras.Model(inputs=inputs, outputs=outputs)
-    
 
-    # Compile the model
-    optimizer = tf.keras.optimizers.Adam()
-    loss = {
-        "bowel":tf.keras.losses.BinaryCrossentropy(),
-        "extra":tf.keras.losses.BinaryCrossentropy(),
-        "kidney":tf.keras.losses.CategoricalCrossentropy(),
-        "liver":tf.keras.losses.CategoricalCrossentropy(),
-        "spleen":tf.keras.losses.CategoricalCrossentropy(),
-    }
-    metrics = {
-        "bowel":["accuracy"],
-        "extra":["accuracy"],
-        "kidney":["accuracy"],
-        "liver":["accuracy"],
-        "spleen":["accuracy"],
-    }
-    print("[INFO] Compiling the model...")
-    model.compile(
-        optimizer=optimizer,
-      loss=loss,
-      metrics=metrics
-    )
-    return model
-
-model = build_model()
-def decode_image_and_label(label):
-    image = tf.random.uniform(config["IMAGE_SHAPE"] + [3, ], 0, 255)
+def decode_image_and_label(img_path: str, label):
+    file_bytes = tf.io.read_file(img_path)
+    image = tf.io.decode_jpeg(file_bytes)
+    image = tf.reshape(image, config["IMAGE_SIZE"])
     image = tf.cast(image, tf.float32) / 255.0
     label = tf.cast(label, tf.float32)
-    #         bowel       extra      kidney      liver       spleen
+    #         bowel       fluid       kidney      liver       spleen
     labels = (label[0:1], label[1:2], label[2:5], label[5:8], label[8:11])
     return (image, labels)
 
+def build_dataset(): 
+    id_label_dict = {label[0]: label[1: ] for label in train_data[config["TARGET_CLASSES"]].values}
+    img_paths = []
+    labels = []
+    slash = "\\" if platform.system() == "Windows" else "/" 
+    for patient_id in os.listdir(TRAIN_IMG_PATH):
+        for img_path in os.listdir(TRAIN_IMG_PATH + slash + patient_id):
+            img_paths.append(TRAIN_IMG_PATH + slash + patient_id + slash + img_path)
+            labels.append(id_label_dict[int(img_paths[-1].split(slash)[-2])]) 
 
-dataframe = pd.read_csv(f"./train.csv")
-x = 1
-train_labels = dataframe[config["TARGET_CLASSES"]].values.astype(np.float32)[0: x]
-train_ds = (tf.data.Dataset.from_tensor_slices((train_labels))\
-.map(decode_image_and_label, num_parallel_calls=config["AUTOTUNE"])\
-.batch(config["BATCH_SIZE"])\
-.prefetch(config["AUTOTUNE"]))
+    if len(img_paths) != len(labels):
+        raise Exception("\n***************\n\
+                        img_paths and labels must be in the same length\
+                        \n***************\n")  
 
-print("****************** \n\n")
-for t in train_ds:
-    print(type(train_ds))
-    print(type(t))
-    for x in t:
-        print(x)
-        print("\n\n")
-        print(type(x))
-        print("\n\n")
-    break
-print("******************\n\n")
+    ds = tf.data.Dataset.from_tensor_slices((img_paths, labels))\
+        .map(decode_image_and_label, num_parallel_calls=config["AUTOTUNE"])\
+        .shuffle(config["BATCH_SIZE"] * 10)\
+        .batch(config["BATCH_SIZE"])\
+        .prefetch(config["AUTOTUNE"])\
+        .unbatch()\
+        .batch(config["BATCH_SIZE"])
+    
+    
+    return ds
 
-print(train_ds)
+def build_model():
+    inputs = tf.keras.Input(shape=config["IMAGE_SIZE"], batch_size=config["BATCH_SIZE"])
 
-print("******************\n\n")
+    #*bowel 
 
-model.fit(train_ds, batch_size=config["BATCH_SIZE"])
+    bowel1 = tf.keras.layers.Dense(units = 32, activation = tf.keras.activations.selu)(inputs)
+    bowel_out = tf.keras.layers.Dense(name = "bowel", units = 1, activation = tf.keras.activations.sigmoid)(bowel1)
+    
+    #*extravasation 
+
+    extra1 = tf.keras.layers.Dense(units = 32, activation = tf.keras.activations.selu)(inputs)
+    extra_out = tf.keras.layers.Dense(name = "extra", units = 1, activation = tf.keras.activations.sigmoid)(extra1)  
+    
+    #*kidney 
+
+    kidney1 = tf.keras.layers.Dense(units = 32, activation = tf.keras.activations.selu)(inputs)
+    kidney_out = tf.keras.layers.Dense(name = "kidney", units = 3, activation = tf.keras.activations.softmax)(kidney1)
+    
+    #*liver 
+
+    liver1 = tf.keras.layers.Dense(units = 32, activation = tf.keras.activations.selu)(inputs)
+    liver_out = tf.keras.layers.Dense(name = "liver", units = 3, activation = tf.keras.activations.softmax)(liver1)
+    
+    #*spleen 
+
+    spleen1 = tf.keras.layers.Dense(units = 32, activation = tf.keras.activations.selu)(inputs)
+    spleen_out = tf.keras.layers.Dense(name = "spleen", units = 3, activation = tf.keras.activations.softmax)(spleen1)
+
+    outputs = [bowel_out, extra_out, kidney_out, liver_out, spleen_out]
+
+    #*compile config
+    optimizer = tf.keras.optimizers.Adam()
+
+    loss = {
+        "bowel":tf.keras.losses.BinaryCrossentropy(from_logits=True),
+        "extra":tf.keras.losses.BinaryCrossentropy(from_logits=True),
+        "liver":tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+        "kidney":tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+        "spleen":tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+    }
+
+    metrics = {
+        "bowel":["accuracy"],
+        "extra":["accuracy"],
+        "liver":["accuracy"],
+        "kidney":["accuracy"],
+        "spleen":["accuracy"],
+    }
+
+    model = tf.keras.Model(inputs=inputs, outputs=outputs)
+    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+
+    return model
+
+
+print("[INFO]: building model")
+st = time.time()
+model = build_model()
+print(f"DONE\n[TIME]: {time.time() - st}")
+print("[INFO]: building dataframe")
+st = time.time()
+data = build_dataset()
+print(f"DONE\n[TIME]: {time.time() - st}")
+
+
+print("[INFO]: started Training")
+# model.fit(data, batch_size = config["BATCH_SIZE"], epochs = config["EPOCHS"])
+
+    
+
+
